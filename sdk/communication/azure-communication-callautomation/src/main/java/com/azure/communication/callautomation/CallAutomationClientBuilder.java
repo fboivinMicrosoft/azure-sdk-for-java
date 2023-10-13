@@ -70,6 +70,7 @@ public final class CallAutomationClientBuilder implements
     private final ClientLogger logger = new ClientLogger(CallAutomationClientBuilder.class);
     private String connectionString;
     private String endpoint;
+private String pmaEndpoint;
     private String hostName;
     private AzureKeyCredential azureKeyCredential;
     private TokenCredential tokenCredential;
@@ -101,6 +102,12 @@ public final class CallAutomationClientBuilder implements
     public CallAutomationClientBuilder endpoint(String endpoint) {
         this.endpoint = Objects.requireNonNull(endpoint, "'endpoint' cannot be null.");
         return this;
+    }
+
+    public CallAutomationClientBuilder pmaEndpoint(String endpoint) {
+        this.pmaEndpoint= Objects.requireNonNull(endpoint, "'pmaEndpoint' cannot be null.");
+        return this;
+
     }
 
     /**
@@ -387,7 +394,7 @@ public final class CallAutomationClientBuilder implements
         }
 
         AzureCommunicationCallAutomationServiceImplBuilder clientBuilder = new AzureCommunicationCallAutomationServiceImplBuilder();
-        clientBuilder.endpoint(endpoint).pipeline(builderPipeline);
+        clientBuilder.endpoint(pmaEndpoint).pipeline(builderPipeline);
             
         return clientBuilder.buildClient();
     }
@@ -413,8 +420,12 @@ public final class CallAutomationClientBuilder implements
 
         List<HttpPipelinePolicy> pipelinePolicies = new ArrayList<>();
         if (tokenCredential != null) {
+if(pmaEndpoint != null){
+                pipelinePolicies.add(new CustomBearerTokenAuthenticationPolicy(tokenCredential, endpoint,  "https://communication.azure.com//.default"));
+            } else {
             pipelinePolicies.add(new BearerTokenAuthenticationPolicy(tokenCredential,
                 "https://communication.azure.com//.default"));
+}
             Map<String, String> httpHeaders = new HashMap<>();
             httpHeaders.put("x-ms-host", hostName);
             pipelinePolicies.add(new AddHeadersPolicy(new HttpHeaders(httpHeaders)));
